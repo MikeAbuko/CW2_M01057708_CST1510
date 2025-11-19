@@ -1,8 +1,5 @@
-"""
-User service functions - Authentication and User Migration.
-Week 8 - CST1510
-Migrated from Week 7 auth.py to use database instead of text file
-"""
+# Week 8 - User Service
+# Functions for login, registration, and moving users from Week 7 to database
 
 import bcrypt
 import sqlite3
@@ -12,7 +9,7 @@ from app.data.users import get_user_by_username, insert_user
 
 
 def hash_password(plain_text_pass):
-    """Hash a plaintext password and return the hash as a UTF-8 string."""
+    # Turn password into a hash so we can store it safely
     pass_bytes = plain_text_pass.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed_pass = bcrypt.hashpw(pass_bytes, salt)
@@ -20,7 +17,7 @@ def hash_password(plain_text_pass):
 
 
 def verify_password(plain_text_password, hashed_password):
-    """Verify a plaintext password against a stored hash (str or bytes)."""
+    # Check if the password matches the stored hash
     password_bytes = plain_text_password.encode('utf-8')
     if isinstance(hashed_password, str):
         hashed_password_bytes = hashed_password.encode('utf-8')
@@ -30,16 +27,14 @@ def verify_password(plain_text_password, hashed_password):
 
 
 def user_exists(username):
-    """Check if user exists in database."""
+    # Check if username is already in database
     user = get_user_by_username(username)
     return user is not None
 
 
 def register_user(username, password, role='user'):
-    """
-    Register a new user in the database.
-    Migrated from Week 7 auth.py
-    """
+    # Add a new user to the database
+    # This used to work with users.txt in Week 7, now uses database
     if user_exists(username):
         print(f"Error: Username {username} already exists.")
         return False
@@ -56,17 +51,15 @@ def register_user(username, password, role='user'):
 
 
 def login_user(username, password):
-    """
-    Authenticate a user against the database.
-    Migrated from Week 7 auth.py
-    """
+    # Check if username and password are correct
+    # This used to check users.txt in Week 7, now checks database
     user = get_user_by_username(username)
     
     if not user:
         print("Error: Username not found.")
         return False
     
-    # user[2] is password_hash column
+    # user[2] is where the password hash is stored
     stored_hash = user[2]
     
     if verify_password(password, stored_hash):
@@ -78,7 +71,8 @@ def login_user(username, password):
 
 
 def validate_username(username):
-    """Return (is_valid: bool, error_message: str)."""
+    # Check if username follows the rules
+    # Returns True/False and an error message
     if len(username) < 3 or len(username) > 20:
         return False, "Username must be between 3 and 20 characters."
     if not username.isalnum():
@@ -87,7 +81,8 @@ def validate_username(username):
 
 
 def validate_password(password):
-    """Return (is_valid: bool, error_message: str)."""
+    # Check if password follows the rules
+    # Returns True/False and an error message
     if len(password) < 6:
         return False, "Password must be at least 6 characters long."
     if not any(char.isdigit() for char in password):
@@ -100,15 +95,8 @@ def validate_password(password):
 
 
 def migrate_users_from_file(filepath='DATA/users.txt'):
-    """
-    Migrate users from users.txt to the database.
-    
-    Args:
-        filepath: Path to users.txt file
-        
-    Returns:
-        int: Number of users migrated
-    """
+    # Move users from Week 7 users.txt file into the database
+    # This only needs to run once
     filepath = Path(filepath)
     
     if not filepath.exists():
@@ -120,20 +108,21 @@ def migrate_users_from_file(filepath='DATA/users.txt'):
     cursor = conn.cursor()
     migrated_count = 0
     
+    # Read the users.txt file line by line
     with open(filepath, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             
-            # Parse line: username,password_hash
+            # Each line is: username,password_hash
             parts = line.split(',', 1)
             if len(parts) >= 2:
                 username = parts[0]
                 password_hash = parts[1]
                 role = 'user'
                 
-                # Insert user (ignore if already exists)
+                # Add user to database (skip if already there)
                 try:
                     cursor.execute(
                         "INSERT OR IGNORE INTO users (username, password_hash, role) VALUES (?, ?, ?)",
