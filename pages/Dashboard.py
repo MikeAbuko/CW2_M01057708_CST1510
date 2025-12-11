@@ -136,6 +136,25 @@ except Exception as e:
     st.error(f"❌ Error loading dashboard: {e}")
     st.info("Make sure the database is initialized. Run `python main.py` first.")
 
+# Week 10 - AI Features Section
+st.divider()
+st.subheader("🤖 AI-Powered Features")
+st.markdown("Use artificial intelligence to analyze incidents and get cybersecurity advice")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("#### 💬 AI Assistant")
+    st.write("Chat with AI about cybersecurity questions and get expert advice.")
+    if st.button("Open AI Assistant", use_container_width=True):
+        st.switch_page("pages/AI_Assistant.py")
+
+with col2:
+    st.markdown("#### 🔍 Incident Analysis")
+    st.write("Use AI to analyze security incidents and get threat assessments.")
+    if st.button("Analyze Incidents", use_container_width=True):
+        st.switch_page("pages/Incidents.py")
+
 # Footer
 st.markdown("---")
 st.caption(f"🔐 Logged in as: {st.session_state.username}")

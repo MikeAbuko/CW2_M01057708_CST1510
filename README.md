@@ -98,4 +98,71 @@ This will:
 
 **Files created:**
 - `Home.py` - Main login page
-- `pages/1_Dashboard.py` through `pages/5_Analytics.py` - All app pages
+- `pages/Dashboard.py` through `pages/Analytics.py` - All app pages
+
+### Week 10: AI Integration (Completed)
+**What I learned:**
+- How to use external AI APIs in my application
+- Working with Hugging Face Inference API
+- Storing API keys securely using Streamlit secrets
+- Creating AI-powered features for cybersecurity analysis
+- Writing prompts to get good responses from AI
+
+**What I built:**
+- **AI Service Module** (`app/services/ai_service.py`)
+  - `analyze_security_incident()` - AI analyzes incidents
+  - `generate_security_tips()` - AI creates security tips
+  - `chat_with_ai()` - Chat with AI about security
+
+- **AI Assistant Page** (`pages/AI_Assistant.py`)
+  - Ask AI any cybersecurity question
+  - Quick question buttons for common topics
+  - Generate security best practices
+  - Get instant AI-powered answers
+
+- **Enhanced Incidents Page**
+  - AI-powered incident analysis button
+  - Threat level assessment from AI
+  - Automatic recommendations
+
+**Technologies used:**
+- **Hugging Face Inference API** - Access to AI models
+- **Mistral-7B-Instruct-v0.2** - The AI model we use
+- **Streamlit Secrets** - Secure way to store API keys
+- **huggingface_hub** Python library
+
+**Features:**
+✅ AI analyzes security incidents  
+✅ Chat with AI about cybersecurity  
+✅ Generate security tips automatically  
+✅ Get threat assessments  
+✅ Quick questions with preset answers  
+✅ Secure API key storage  
+
+**New files:**
+- `.streamlit/secrets.toml` - Stores API key (not uploaded to git)
+- `app/services/ai_service.py` - AI integration functions
+- `pages/AI_Assistant.py` - AI chat page
+- `test_ai.py` - Test script
+
+**Modified files:**
+- `pages/Incidents.py` - Added AI analysis
+- `pages/Dashboard.py` - Added AI features section
+- `requirements.txt` - Added huggingface_hub
+
+**How to use:**
+1. Go to **Incidents** page
+2. Add or select an incident
+3. Click "Analyze with AI" to get assessment
+4. Visit **AI Assistant** page to chat
+5. Ask questions or generate tips
+
+**Setting up API key:**
+1. Make account at https://huggingface.co
+2. Go to Settings → Access Tokens
+3. Create new token with "Read" access
+4. Put it in `.streamlit/secrets.toml`:
+   ```toml
+   HF_TOKEN = "your_token_here"
+   ```
+5. Never upload secrets.toml to GitHub (it's in .gitignore)

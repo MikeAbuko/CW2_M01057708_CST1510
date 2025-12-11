@@ -2,3 +2,4 @@ bcrypt
 pandas
 streamlit
 plotly
+huggingface_hub

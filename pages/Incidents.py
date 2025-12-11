@@ -11,6 +11,8 @@ from app.data.incidents import (
     update_incident_status,
     delete_incident
 )
+# Week 10 - Import AI function
+from app.services.ai_service import analyze_security_incident
 
 # Page configuration
 st.set_page_config(
@@ -246,6 +248,53 @@ with tab4:
     
     except Exception as e:
         st.error(f"Error: {e}")
+
+# Week 10 - AI Analysis Section
+st.divider()
+st.subheader("🤖 AI-Powered Incident Analysis")
+st.markdown("Use AI to analyze security incidents and get threat assessments")
+
+try:
+    # Get all incidents for selection
+    incidents_df = get_all_incidents()
+    
+    if not incidents_df.empty:
+        # Let user pick which incident to analyze
+        incident_options = {}
+        for _, row in incidents_df.iterrows():
+            label = f"ID {row['id']}: {row['incident_type']} ({row['severity']})"
+            incident_options[label] = row['id']
+        
+        selected = st.selectbox(
+            "Select Incident for AI Analysis",
+            list(incident_options.keys())
+        )
+        
+        # Button to analyze
+        if st.button("🤖 Analyze with AI", type="primary", use_container_width=True):
+            # Get the selected incident details
+            incident_id = incident_options[selected]
+            incident = incidents_df[incidents_df['id'] == incident_id].iloc[0]
+            
+            # Create text description for AI
+            incident_text = f"""Type: {incident['incident_type']}
+Severity: {incident['severity']}
+Description: {incident['description']}
+Date: {incident['date']}"""
+            
+            # Show loading message
+            with st.spinner("🤖 AI is analyzing the incident... This may take 10-20 seconds..."):
+                analysis = analyze_security_incident(incident_text)
+            
+            # Show results
+            st.success("✅ Analysis Complete!")
+            st.markdown("### 🎯 AI Analysis Results")
+            st.info(analysis)
+    else:
+        st.info("📝 No incidents available. Add an incident first to use AI analysis.")
+        
+except Exception as e:
+    st.error(f"Error loading AI analysis: {e}")
 
 # Footer
 st.markdown("---")
