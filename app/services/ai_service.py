@@ -39,7 +39,7 @@ def analyze_security_incident(incident_description):
         messages = [
             {
                 "role": "user",
-                "content": f"""You are a cybersecurity expert. Analyze this security incident:
+                "content": f"""You are a senior cybersecurity analyst expert. Analyze this security incident:
 
 Incident: {incident_description}
 
@@ -48,7 +48,7 @@ Provide a brief analysis including:
 2. Attack Type
 3. Recommended Actions (2-3 steps)
 
-Keep your response concise and professional."""
+Keep your response concise and professional adhering to the best practices and modern technologies."""
             }
         ]
         
@@ -83,7 +83,7 @@ def generate_security_tips():
         messages = [
             {
                 "role": "user",
-                "content": """You are a cybersecurity expert. Provide 5 key cybersecurity best practices for 2025 or the latest date trends.
+                "content": """You are a senior cybersecurity analyst expert. Provide 5 key cybersecurity best practices for 2025 or the latest date trends.
 
 Format as a numbered list (1-5). Keep each point brief and actionable."""
             }
@@ -123,7 +123,7 @@ def chat_with_ai(user_question):
         messages = [
             {
                 "role": "user",
-                "content": f"""You are a helpful cybersecurity assistant. Answer this question clearly and concisely.
+                "content": f"""You are a helpful senior cybersecurity analyst assistant who follows up on the most current trends. Answer this question clearly and concisely.
 
 Question: {user_question}
 
