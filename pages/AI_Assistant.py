@@ -108,4 +108,4 @@ with tab2:
 
 # Footer
 st.markdown("---")
-st.caption(f"🔐 Logged in as: {st.session_state.username} | Powered by Hugging Face AI")
+st.caption(f"🔐 Logged in as: {st.session_state.username} | Powered by AngryPanda🐼")

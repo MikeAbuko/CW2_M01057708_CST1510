@@ -3,6 +3,7 @@
 
 import bcrypt
 import sqlite3
+import string  # Import string module for character sets
 from pathlib import Path
 from app.data.db import connect_database
 from app.data.users import get_user_by_username, insert_user
@@ -83,14 +84,18 @@ def validate_username(username):
 def validate_password(password):
     # Check if password follows the rules
     # Returns True/False and an error message
-    if len(password) < 6:
-        return False, "Password must be at least 6 characters long."
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
     if not any(char.isdigit() for char in password):
         return False, "Password must contain at least one digit."
     if not any(char.isupper() for char in password):
         return False, "Password must contain at least one uppercase letter."
     if not any(char.islower() for char in password):
         return False, "Password must contain at least one lowercase letter."
+    # Check for special characters
+    if not any(not char.isalnum() and not char.isspace() for char in password):
+        return False, "Password must contain at least one special character(eg. !@#$%^&*()...)."
+    
     return True, ""
 
 

@@ -1,18 +1,20 @@
-# Week 9 - Incidents Page (CRUD Operations)
-# Create, Read, Update, Delete cyber security incidents
+# Week 10 + 11 - Incidents Page (CRUD Operations - OOP Version)
+# Create, Read, Update, Delete cyber security incidents using OOP
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-# Import Week 8 functions
+# Import Week 8 functions (keep for backward compatibility)
 from app.data.incidents import (
     get_all_incidents,
     insert_incident,
     update_incident_status,
     delete_incident
 )
-# Week 10 - Import AI function
-from app.services.ai_service import analyze_security_incident
+# Week 11 - Import OOP classes newly created
+from app.services.database_manager import DatabaseManager
+from app.services.ai_service import AIAssistant
+from models.security_incident import SecurityIncident
 
 # Page configuration
 st.set_page_config(
@@ -27,6 +29,10 @@ if 'logged_in' not in st.session_state or not st.session_state.logged_in:
     st.info("👈 Go to Home page to login")
     st.stop()
 
+# Week 11 - Create OOP instances
+db_manager = DatabaseManager()
+ai_assistant = AIAssistant()
+
 # Main page
 st.title("🚨 Cyber Incidents Management")
 st.markdown("Create, view, update, and delete cybersecurity incidents")
@@ -34,16 +40,21 @@ st.markdown("Create, view, update, and delete cybersecurity incidents")
 # Tabs for different operations
 tab1, tab2, tab3, tab4 = st.tabs(["📋 View All", "➕ Add New", "✏️ Update", "🗑️ Delete"])
 
-# TAB 1: View All Incidents
+# TAB 1: View All Incidents (OOP Version)
 with tab1:
     st.subheader("All Cyber Incidents")
     
     try:
-        df = get_all_incidents()
+        # Week 11 - Get incidents as objects
+        incidents = db_manager.get_all_incidents()
         
-        if df.empty:
+        if not incidents:
             st.info("No incidents found. Add some incidents using the 'Add New' tab.")
         else:
+            # Convert objects to DataFrame for display
+            incident_dicts = [incident.to_dict() for incident in incidents]
+            df = pd.DataFrame(incident_dicts)
+            
             # Filters
             col1, col2, col3 = st.columns(3)
             
@@ -92,7 +103,7 @@ with tab1:
     except Exception as e:
         st.error(f"Error loading incidents: {e}")
 
-# TAB 2: Add New Incident
+# TAB 2: Add New Incident (OOP Version)
 with tab2:
     st.subheader("Report New Incident")
     
@@ -136,7 +147,9 @@ with tab2:
                 st.error("❌ Description is required!")
             else:
                 try:
-                    id = insert_incident(
+                    # Week 11 - Create SecurityIncident object
+                    new_incident = SecurityIncident(
+                        incident_id=None,  # Will be set by database
                         date=str(date),
                         incident_type=incident_type,
                         severity=severity,
@@ -144,7 +157,10 @@ with tab2:
                         description=description,
                         reported_by=reported_by
                     )
-                    st.success(f"✅ Incident #{id} reported successfully!")
+                    
+                    # Insert using OOP method
+                    incident_id = db_manager.insert_incident(new_incident)
+                    st.success(f"✅ Incident #{incident_id} reported successfully!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Error adding incident: {e}")
@@ -249,21 +265,21 @@ with tab4:
     except Exception as e:
         st.error(f"Error: {e}")
 
-# Week 10 - AI Analysis Section
+# Week 10/11 - AI Analysis Section (OOP Version)
 st.divider()
 st.subheader("🤖 AI-Powered Incident Analysis")
 st.markdown("Use AI to analyze security incidents and get threat assessments")
 
 try:
-    # Get all incidents for selection
-    incidents_df = get_all_incidents()
+    # Get all incidents as objects
+    incidents = db_manager.get_all_incidents()
     
-    if not incidents_df.empty:
+    if incidents:
         # Let user pick which incident to analyze
         incident_options = {}
-        for _, row in incidents_df.iterrows():
-            label = f"ID {row['id']}: {row['incident_type']} ({row['severity']})"
-            incident_options[label] = row['id']
+        for incident in incidents:
+            label = f"ID {incident.get_id()}: {incident.get_incident_type()} ({incident.get_severity()})"
+            incident_options[label] = incident.get_id()
         
         selected = st.selectbox(
             "Select Incident for AI Analysis",
@@ -272,24 +288,29 @@ try:
         
         # Button to analyze
         if st.button("🤖 Analyze with AI", type="primary", use_container_width=True):
-            # Get the selected incident details
+            # Get the selected incident object
             incident_id = incident_options[selected]
-            incident = incidents_df[incidents_df['id'] == incident_id].iloc[0]
+            selected_incident = db_manager.get_incident_by_id(incident_id)
             
-            # Create text description for AI
-            incident_text = f"""Type: {incident['incident_type']}
-Severity: {incident['severity']}
-Description: {incident['description']}
-Date: {incident['date']}"""
+            # Create text description for AI using object methods
+            incident_text = f"""Type: {selected_incident.get_incident_type()}
+Severity: {selected_incident.get_severity()}
+Description: {selected_incident.get_description()}
+Date: {selected_incident.get_date()}
+Severity Level: {selected_incident.get_severity_level()}/4"""
             
             # Show loading message
             with st.spinner("🤖 AI is analyzing the incident... This may take 10-20 seconds..."):
-                analysis = analyze_security_incident(incident_text)
+                # Use OOP AI assistant
+                analysis = ai_assistant.analyze_incident(incident_text)
             
             # Show results
             st.success("✅ Analysis Complete!")
             st.markdown("### 🎯 AI Analysis Results")
             st.info(analysis)
+            
+            # Show incident object info
+            st.caption(f"Analyzed: {selected_incident}")
     else:
         st.info("📝 No incidents available. Add an incident first to use AI analysis.")
         
@@ -298,4 +319,4 @@ except Exception as e:
 
 # Footer
 st.markdown("---")
-st.caption(f"🔐 Logged in as: {st.session_state.username}")
+st.caption(f"🔐 Logged in as: {st.session_state.username} | Powered by AngryPanda🐼")

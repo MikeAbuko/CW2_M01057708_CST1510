@@ -157,4 +157,4 @@ with col2:
 
 # Footer
 st.markdown("---")
-st.caption(f"🔐 Logged in as: {st.session_state.username}")
+st.caption(f"🔐 Logged in as: {st.session_state.username} | Powered by AngryPanda🐼")

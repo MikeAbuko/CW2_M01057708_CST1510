@@ -40,6 +40,10 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'username' not in st.session_state:
     st.session_state.username = None
+if 'show_registration_success' not in st.session_state:
+    st.session_state.show_registration_success = False
+if 'registered_username' not in st.session_state:
+    st.session_state.registered_username = None
 
 # Main app
 st.markdown('<h1 class="main-header">🔐 Intelligence Platform</h1>', unsafe_allow_html=True)
@@ -67,88 +71,127 @@ if st.session_state.logged_in:
             st.session_state.username = None
             st.rerun()
 else:
-    # Show login/register tabs
-    tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
-    
-    # LOGIN TAB
-    with tab1:
+    # Check if we need to show success and switch to login
+    if st.session_state.show_registration_success:
+        # Show only login section with success message
+        st.success(f"✅ Account created successfully for {st.session_state.registered_username}!")
+        st.info("🔄 Please login with your new credentials below.")
+        
+        st.markdown("---")
         st.markdown("### Login to your account")
         
-        with st.form("login_form"):
-            username = st.text_input("Username", placeholder="Enter your username")
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
+        with st.form("login_form_after_reg", clear_on_submit=True):
+            username = st.text_input("Username", placeholder="Enter your username", key="login_username_after")
+            password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password_after")
             submit = st.form_submit_button("Login", type="primary", use_container_width=True)
             
             if submit:
                 if not username or not password:
                     st.error("❌ Please fill in all fields.")
                 else:
-                    # Check credentials
                     user = get_user_by_username(username)
                     if user:
                         from app.services.user_service import verify_password
                         if verify_password(password, user[2]):
+                            # Clear registration success flags BEFORE setting logged in
+                            st.session_state.show_registration_success = False
+                            st.session_state.registered_username = None
+                            # Now set logged in
                             st.session_state.logged_in = True
                             st.session_state.username = username
-                            st.success(f"✅ Welcome, {username}!")
                             st.rerun()
                         else:
                             st.error("❌ Invalid password.")
                     else:
                         st.error("❌ Username not found.")
+        
+        # Link to go back to tabs
+        if st.button("↩️ Back to Register"):
+            st.session_state.show_registration_success = False
+            st.session_state.registered_username = None
+            st.rerun()
     
-    # REGISTER TAB
-    with tab2:
-        st.markdown("### Create a new account")
+    else:
+        # Normal tabs view
+        tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
         
-        with st.form("register_form"):
-            new_username = st.text_input("Username", placeholder="Choose a username (3-20 characters)")
-            new_password = st.text_input("Password", type="password", placeholder="Choose a password")
-            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password")
-            submit_register = st.form_submit_button("Register", type="primary", use_container_width=True)
+        # LOGIN TAB
+        with tab1:
+            st.markdown("### Login to your account")
             
-            if submit_register:
-                # Validate inputs
-                if not new_username or not new_password or not confirm_password:
-                    st.error("❌ Please fill in all fields.")
-                elif new_password != confirm_password:
-                    st.error("❌ Passwords do not match.")
-                else:
-                    # Validate username
-                    valid_user, user_msg = validate_username(new_username)
-                    if not valid_user:
-                        st.error(f"❌ {user_msg}")
+            with st.form("login_form", clear_on_submit=True):
+                username = st.text_input("Username", placeholder="Enter your username", key="login_username")
+                password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password")
+                submit = st.form_submit_button("Login", type="primary", use_container_width=True)
+                
+                if submit:
+                    if not username or not password:
+                        st.error("❌ Please fill in all fields.")
                     else:
-                        # Validate password
-                        valid_pass, pass_msg = validate_password(new_password)
-                        if not valid_pass:
-                            st.error(f"❌ {pass_msg}")
-                        else:
-                            # Register user
-                            if register_user(new_username, new_password):
-                                st.success(f"✅ Account created successfully! You can now login.")
+                        user = get_user_by_username(username)
+                        if user:
+                            from app.services.user_service import verify_password
+                            if verify_password(password, user[2]):
+                                st.session_state.logged_in = True
+                                st.session_state.username = username
+                                st.rerun()
                             else:
-                                st.error(f"❌ Username '{new_username}' already exists.")
+                                st.error("❌ Invalid password.")
+                        else:
+                            st.error("❌ Username not found.")
         
-        # Show password requirements
-        with st.expander("ℹ️ Password Requirements"):
-            st.markdown("""
-            **Username:**
-            - 3-20 characters
-            - Alphanumeric only (no special characters)
+        # REGISTER TAB
+        with tab2:
+            st.markdown("### Create a new account")
             
-            **Password:**
-            - At least 6 characters
-            - At least one digit
-            - At least one uppercase letter
-            - At least one lowercase letter
-            """)
+            with st.form("register_form", clear_on_submit=True):
+                new_username = st.text_input("Username", placeholder="Choose a username (3-20 characters)", key="register_username")
+                new_password = st.text_input("Password", type="password", placeholder="Choose a password", key="register_password")
+                confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password", key="register_confirm")
+                submit_register = st.form_submit_button("Register", type="primary", use_container_width=True)
+                
+                if submit_register:
+                    if not new_username or not new_password or not confirm_password:
+                        st.error("❌ Please fill in all fields.")
+                    elif new_password != confirm_password:
+                        st.error("❌ Passwords do not match.")
+                    else:
+                        valid_user, user_msg = validate_username(new_username)
+                        if not valid_user:
+                            st.error(f"❌ {user_msg}")
+                        else:
+                            valid_pass, pass_msg = validate_password(new_password)
+                            if not valid_pass:
+                                st.error(f"❌ {pass_msg}")
+                            else:
+                                if register_user(new_username, new_password):
+                                    # Set flag and rerun to show login section
+                                    st.session_state.show_registration_success = True
+                                    st.session_state.registered_username = new_username
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ Username '{new_username}' already exists.")
+            
+            # Show password requirements
+            with st.expander("ℹ️ Password Requirements"):
+                st.markdown("""
+                **Username:**
+                - 3-20 characters
+                - Alphanumeric only (no special characters)
+                
+                **Password:**
+                - At least 8 characters
+                - At least one digit
+                - At least one uppercase letter
+                - At least one lowercase letter
+                - At least one special character (e.g., !@#$%^&*)
+                """)
 
 # Footer
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #888;'>
     <p>🎓 CST1510 - Multi-Domain Intelligence Platform</p>
-    <p>Student: Mike Abuko (M01057708)</p>
+    <p>Student: Mike Abuko (M01057708) - AngryPanda🐼</p>
 </div>
 """, unsafe_allow_html=True)
